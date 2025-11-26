@@ -1,13 +1,11 @@
 """
 Plotting shots
 ==============
-
-Start by watching the video below, then learn how to plot shot positions.
-
-..  youtube:: GWsK_KWKCas
-   :width: 640
-   :height: 349
-
+Skript aus dem Soccermatics erweitert
+- Funktionen für die Plots geschrieben
+- Shots um Passes erweitert
+christoph.achermann@gmail.com
+26.11.2025
 """
 
 import matplotlib.pyplot as plt
@@ -37,15 +35,63 @@ def get_events_from_matchlist(list_match, fbstats_object):
         pd.concat(freeze_all, ignore_index=True),
         pd.concat(tactics_all, ignore_index=True)
     )
+def plot_player_passes(curr_player_id, df_events):
+    player_shots = df_events[df_events["player_id"] == curr_player_id]
+    if player_shots.empty:
+        print("No events for player", curr_player_id)
+        return
 
+    player_name = player_shots["player_name"].unique()[0]
 
+    # Pitch erstellen
+    pitch = VerticalPitch(line_color='black', half=True)
+
+    fig, axs = pitch.grid(
+        grid_height=0.9,
+        title_height=0.06,
+        axis=False,
+        endnote_height=0.04,
+        title_space=0,
+        endnote_space=0
+    )
+
+    ax_pitch = axs['pitch']  # Das richtige Axes-Objekt holen
+
+    # Daten plotten mit mplsoccer.scatter — hier: auf dem Pitch-Axes
+    pitch.scatter(
+        player_shots["x"],
+        player_shots["y"],
+        c="red",
+        s=40,
+        alpha=player_shots["outcome_name"].eq("Goal").map({True: 1, False: 0.2}),
+        ax=ax_pitch
+    )
+
+    # Titel setzen
+    fig.suptitle(f"{player_name} shots", fontsize=24)
+
+    plt.show()
+
+"""
+Definition of Variables
+"""
+#Competition-Id Euro der Männer
+var_competition_id = 55 
+#Saison Id für 2024
+var_season_id = 282
+#alle Spiele der Schweiz; team_id=773
+team_id_current = 773
+"""
+Data from statsbomb
+"""
+#Statsbomb-service öffnen
 parser = Sbopen()
 # list of competitions
 free_competitions = parser.competition()
+
 # eine _Liste aller Spiele der EM 2024
-euro_2024_matches = parser.match(competition_id = 55, season_id = 282)
-#alle Spiele der Schweiz; team_id=773
-team_id_current = 773
+euro_2024_matches = parser.match(competition_id = var_competition_id, season_id = var_season_id)
+
 euro_2024_matches_current_team = euro_2024_matches[
     (euro_2024_matches["away_team_id"] == team_id_current) |
     (euro_2024_matches["home_team_id"] == team_id_current)
@@ -62,20 +108,6 @@ team_name_current
 shots = df.loc[df['type_name'] == 'Shot'].set_index('id')
     
 ##############################################################################
-# Making the shot map using iterative solution
-# ----------------------------
-# First let's draw the pitch using the `MPL Soccer class <https://mplsoccer.readthedocs.io/en/latest/gallery/pitch_setup/plot_pitches.html>`_,
-#
-# In this example, we set variables for pitch length and width to the Statsbomb coordinate system (they use yards).
-# You can read more about `different coordinate systems here <https://mplsoccer.readthedocs.io/en/latest/gallery/pitch_setup/plot_compare_pitches.html>`_
-#
-# Now, we iterate through all the shots in the match. We take *x* and *y* coordinates, the team name and information
-# if goal was scored. If It was scored, we plot a solid circle with a name of the player, if not, we plot a
-# transculent circle (parameter alpha tunes the transcluency).
-# To have England's shots on one half and Sweden shots on the other half,
-# we subtract *x* and *y* from the pitch length and height.
-#
-# Football data tends to be attacking left to right, and we will use this as default in the course.
 
 pitch = Pitch(line_color = "black")
 fig, ax = pitch.draw(figsize=(10, 7))
@@ -132,7 +164,8 @@ plt.show()
 #Plot vertical, einmal für jeden Speieler
 list_player = shots_self["player_id"].unique()
 for player_id in list_player:
-    
+    plot_player_passes(player_id , shots)
+    """
     # Schüsse dieses Spielers
     player_shots = shots_self[shots_self["player_id"] == player_id]
     player_name = player_shots["player_name"].unique()[0]
@@ -154,7 +187,8 @@ for player_id in list_player:
     fig.suptitle(f"{player_name} shots", fontsize=24)
 
     plt.show()    
-
+    """
+"""
 pitch = VerticalPitch(line_color='black', half = True)
 fig, ax = pitch.grid(grid_height=0.9, title_height=0.06, axis=False,
                      endnote_height=0.04, title_space=0, endnote_space=0)
@@ -171,3 +205,4 @@ plt.show()
 # 3) Plot only passes made by Caroline Seger (she is Sara Caroline Seger in the database)
 # 4) Plot arrows to show where the passes went to.
 
+"""
