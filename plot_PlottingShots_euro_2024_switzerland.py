@@ -58,9 +58,17 @@ team_name_current = euro_2024_matches_current_team[
     euro_2024_matches_current_team['home_team_id'] == team_id_current ]["home_team_name"].unique()[0]
 team_name_current
 
+df = df.assign(
+    dx = df["end_x"] - df["x"],
+    dy = df["end_y"] - df["y"])
+
 #A dataframe of shots
 shots = df.loc[df['type_name'] == 'Shot'].set_index('id')
-    
+# Dataframe of passes
+list_event_types = df.type_name.unique()
+list_event_types
+passes = df.loc[df['type_name'] == 'Pass'].set_index('id')    
+
 ##############################################################################
 # Making the shot map using iterative solution
 # ----------------------------
@@ -135,25 +143,76 @@ for player_id in list_player:
     
     # Schüsse dieses Spielers
     player_shots = shots_self[shots_self["player_id"] == player_id]
+    player_passes = passes[passes["player_id"] == player_id]
     player_name = player_shots["player_name"].unique()[0]
 
     # Pitch erstellen
     pitch = VerticalPitch(line_color='black', half=True)
-    fig, ax = pitch.grid(grid_height=0.9, title_height=0.06, axis=False,
-                         endnote_height=0.04, title_space=0, endnote_space=0)
+    fig, ax = pitch.draw(figsize=(8, 12))
 
     # Plotten der Shots
     ax.scatter(
-        player_shots["x_plot"], player_shots["y_plot"],
+        player_shots.y , player_shots.x,
         c="red",
         s=40,
         alpha=player_shots["outcome_name"].eq("Goal").map({True: 1, False: 0.2})
     )
+    #ax.arrows(passes.x, passes.y, passes.end.x)
 
     # Titel setzen
     fig.suptitle(f"{player_name} shots", fontsize=24)
 
     plt.show()    
+    
+    
+##############################################################################
+# Plotting passes and shots on whole pitch
+# ----------------------------
+#Plot vertical, einmal für jeden Speieler
+list_player = shots_self["player_id"].unique()
+for player_id in list_player:
+    
+    # Schüsse dieses Spielers
+    player_shots = shots_self[shots_self["player_id"] == player_id]
+    player_passes = passes[passes["player_id"] == player_id]
+    player_name = player_shots["player_name"].unique()[0]
+
+    # Pitch erstellen
+    #pitch = VerticalPitch(line_color='black', half=True)
+    #fig, ax = pitch.draw(figsize=(8, 12))
+    pitch = Pitch(line_color = "black")
+    fig, ax = pitch.draw(figsize=(10, 7))
+
+    # Plotten der Shots
+    ax.scatter(
+        player_shots.x , player_shots.y,
+        c="red",
+        s=40,
+        alpha=player_shots["outcome_name"].eq("Goal").map({True: 1, False: 0.2})
+    )
+    #x.arrows(player_passes.x, player_passes.y, player_passes.end.dx, player_passes.end.dy,  color = "blue")
+    for _, p in player_passes.iterrows():
+        ax.arrow(
+            p['x'], p['y'],   # Startpunkt
+            p['dx'], p['dy'], # Differenz zum Endpunkt
+            width=0.4,
+            head_width=2.5,    
+            color="blue",
+            alpha=0.8,
+            length_includes_head=True)
+    pitch.scatter(player_passes.x, player_passes.y, alpha = 0.2, s = 500, color = "blue" , ax = ax)
+
+    # Titel setzen
+    fig.suptitle(f"{player_name} shots and passes", fontsize=24)
+
+    plt.show()    
+
+
+
+freeze_first_match = freeze[freeze.match_id == 3942227]
+
+
+
 
 pitch = VerticalPitch(line_color='black', half = True)
 fig, ax = pitch.grid(grid_height=0.9, title_height=0.06, axis=False,
