@@ -54,6 +54,12 @@ euro_2024_matches_current_team = euro_2024_matches[
 euro_2024_matches_current_team.match_id
 df, related, freeze, tactics = get_events_from_matchlist(
     euro_2024_matches_current_team.match_id, parser)
+# nur ein Spiel filtern
+df = df[df.match_id == 3940878]
+events_alternativ = parser.event(3940878)      # Beispielmatch
+frames_alternativ = parser.frame(3940878)      # 360 freeze frames
+
+
 team_name_current = euro_2024_matches_current_team[
     euro_2024_matches_current_team['home_team_id'] == team_id_current ]["home_team_name"].unique()[0]
 team_name_current
@@ -204,11 +210,12 @@ for player_id in list_player:
 
     # Titel setzen
     fig.suptitle(f"{player_name} shots and passes", fontsize=24)
+    plt.savefig("pass_plot_" + player_name + ".png")   # speichert im aktuellen Arbeitsverzeichnis 
+    plt.show()
+    
 
-    plt.show()    
 
-
-
+"""
 freeze_first_match = freeze[freeze.match_id == 3942227]
 
 
@@ -230,3 +237,4 @@ plt.show()
 # 3) Plot only passes made by Caroline Seger (she is Sara Caroline Seger in the database)
 # 4) Plot arrows to show where the passes went to.
 
+"""
