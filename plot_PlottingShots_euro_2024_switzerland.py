@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas
 from mplsoccer import Pitch, Sbopen, VerticalPitch
-
 import pandas as pd
 
 
